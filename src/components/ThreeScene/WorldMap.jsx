@@ -1,7 +1,42 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { RigidBody, CuboidCollider } from '@react-three/rapier';
 import { useStore } from '../../store/useStore';
 import { HologramScreen } from './HologramScreen';
+import { useGLTF } from '@react-three/drei';
+
+// Component to load and clone the lighthouse model for reuse across multiple islands
+function Lighthouse() {
+  const { scene } = useGLTF('/models/lighthouse.glb');
+  
+  const clonedScene = useMemo(() => {
+    if (!scene) return null;
+    const cloned = scene.clone();
+    cloned.traverse((child) => {
+      if (child.name && child.name.includes('Ocean')) {
+        child.visible = false;
+      }
+      if (child.isMesh) {
+        child.castShadow = true;
+        child.receiveShadow = true;
+        if (child.material) {
+          child.material.envMapIntensity = 1.5;
+          child.material.needsUpdate = true;
+        }
+      }
+    });
+    return cloned;
+  }, [scene]);
+
+  if (!clonedScene) return null;
+
+  // Render the lighthouse model. We start with a scale of 0.2 and position it to sit on top of the island.
+  // We can adjust the scale/rotation as needed once we inspect it in the browser.
+  return (
+    <group position={[0, 0.5, 0]} rotation={[0, 0, 0]}>
+      <primitive object={clonedScene} scale={[0.02, 0.02, 0.02]} />
+    </group>
+  );
+}
 
 // Basic Island Component to represent the stops
 function Island({ position, title, description, imagePath, stopIndex, color, children }) {
@@ -45,7 +80,7 @@ function Island({ position, title, description, imagePath, stopIndex, color, chi
   );
 }
 
-export function Islands() {
+export function WorldMap() {
   return (
     <>
       {/* STOP 1: AI Email Parser */}
@@ -56,10 +91,7 @@ export function Islands() {
         description="Emails fly into the AI machine and are parsed into Inquiries automatically."
         color="#3b82f6"
       >
-        <mesh position={[0, 1, 0]} castShadow>
-          <boxGeometry args={[4, 4, 4]} />
-          <meshStandardMaterial color="#60a5fa" />
-        </mesh>
+        <Lighthouse />
       </Island>
 
       {/* STOP 2: Inquiry Management */}
@@ -70,8 +102,7 @@ export function Islands() {
         description="Review parsed inquiries. Track status, priority, and assign to team members."
         color="#eab308"
       >
-        <mesh position={[-2, 1, 2]} castShadow><boxGeometry args={[2, 2, 4]} /><meshStandardMaterial color="#facc15" /></mesh>
-        <mesh position={[2, 1, -1]} castShadow><boxGeometry args={[2, 2, 4]} /><meshStandardMaterial color="#facc15" /></mesh>
+        <Lighthouse />
       </Island>
 
       {/* STOP 3: Quotation */}
@@ -82,9 +113,7 @@ export function Islands() {
         description="Generate precise quotations instantly from your uploaded data."
         color="#f97316"
       >
-        {/* Crane mock */}
-        <mesh position={[0, 4, 0]} castShadow><boxGeometry args={[1, 8, 1]} /><meshStandardMaterial color="#333" /></mesh>
-        <mesh position={[2, 7.5, 0]} castShadow><boxGeometry args={[6, 0.5, 0.5]} /><meshStandardMaterial color="#eab308" /></mesh>
+        <Lighthouse />
       </Island>
 
       {/* STOP 4: Purchase Order */}
@@ -95,8 +124,7 @@ export function Islands() {
         description="Manage massive POs seamlessly. Warehouses stock and prepare."
         color="#a855f7"
       >
-        {/* Warehouse mock */}
-        <mesh position={[0, 2, 0]} castShadow><boxGeometry args={[10, 4, 8]} /><meshStandardMaterial color="#9333ea" /></mesh>
+        <Lighthouse />
       </Island>
       
       {/* Additional stops can be added simply by adding more <Island> components */}
@@ -107,9 +135,11 @@ export function Islands() {
         description="The AI Operating System for Global Trading. Book your demo today."
         color="#0f172a"
       >
-        {/* HQ mock */}
-        <mesh position={[0, 6, 0]} castShadow><boxGeometry args={[8, 12, 8]} /><meshStandardMaterial color="#cbd5e1" metalness={0.8} roughness={0.2} /></mesh>
+        <Lighthouse />
       </Island>
     </>
   );
 }
+
+// Preload the lighthouse model
+useGLTF.preload('/models/lighthouse.glb');

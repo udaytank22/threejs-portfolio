@@ -8,7 +8,7 @@ import { useStore } from '../../store/useStore';
 // Premium GLB loader component
 function PremiumShipModel() {
   const { scene } = useGLTF('/models/container_ship.glb');
-  
+
   useEffect(() => {
     if (scene) {
       scene.traverse((child) => {
@@ -17,7 +17,7 @@ function PremiumShipModel() {
           child.receiveShadow = true;
           if (child.material) {
             // Enhance PBR for Unreal Engine-like look
-            child.material.envMapIntensity = 2.0; 
+            child.material.envMapIntensity = 2.0;
             child.material.needsUpdate = true;
           }
         }
@@ -44,12 +44,12 @@ function PlaceholderShip() {
         <meshStandardMaterial color="#4a90e2" wireframe />
       </mesh>
       <Html position={[0, 3, 1]} center>
-        <div style={{ 
-          background: 'rgba(0,0,0,0.85)', 
-          color: 'white', 
-          padding: '16px', 
-          borderRadius: '8px', 
-          width: '320px', 
+        <div style={{
+          background: 'rgba(0,0,0,0.85)',
+          color: 'white',
+          padding: '16px',
+          borderRadius: '8px',
+          width: '320px',
           textAlign: 'center',
           backdropFilter: 'blur(8px)',
           border: '1px solid #4a90e2',
@@ -57,7 +57,7 @@ function PlaceholderShip() {
         }}>
           <h3 style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: '600' }}>⚓ Awaiting AAA Ship Model</h3>
           <p style={{ margin: 0, fontSize: '13px', lineHeight: '1.5', color: '#cbd5e1' }}>
-            Please drop your premium <b>container_ship.glb</b> file into the<br/>
+            Please drop your premium <b>container_ship.glb</b> file into the<br />
             <code style={{ background: '#1e293b', padding: '2px 6px', borderRadius: '4px', display: 'inline-block', marginTop: '6px' }}>public/models/</code> folder to activate it.
           </p>
         </div>
@@ -70,7 +70,7 @@ export function Ship() {
   const bodyRef = useRef();
   const [subscribeKeys, getKeys] = useKeyboardControls();
   const started = useStore((state) => state.started);
-  
+
   const [modelExists, setModelExists] = useState(null);
 
   useEffect(() => {
@@ -94,8 +94,22 @@ export function Ship() {
   useFrame((state, delta) => {
     if (!bodyRef.current || !started) return;
 
-    const { forward, backward, left, right } = getKeys();
+    // Handle docked state
+    const isDocked = useStore.getState().isDocked;
     const linvel = bodyRef.current.linvel();
+
+    if (isDocked) {
+      // Bring the ship to a halt quickly
+      bodyRef.current.setLinvel({
+        x: THREE.MathUtils.lerp(linvel.x, 0, 0.1),
+        y: linvel.y,
+        z: THREE.MathUtils.lerp(linvel.z, 0, 0.1)
+      }, true);
+      bodyRef.current.setAngvel({ x: 0, y: THREE.MathUtils.lerp(bodyRef.current.angvel().y, 0, 0.1), z: 0 }, true);
+      return;
+    }
+
+    const { forward, backward, left, right } = getKeys();
     const rotation = bodyRef.current.rotation();
     const euler = new THREE.Euler().setFromQuaternion(new THREE.Quaternion(rotation.x, rotation.y, rotation.z, rotation.w));
 
@@ -103,7 +117,7 @@ export function Ship() {
     let turnForce = 0;
     if (left) turnForce += turnSpeed;
     if (right) turnForce -= turnSpeed;
-    
+
     // Apply angular velocity for turning
     bodyRef.current.setAngvel({ x: 0, y: turnForce, z: 0 }, true);
 
@@ -114,7 +128,7 @@ export function Ship() {
 
     // Calculate forward vector based on current rotation
     const direction = new THREE.Vector3(0, 0, speed).applyEuler(euler);
-    
+
     // Smoothly interpolate current velocity towards the target direction
     const newLinvelX = THREE.MathUtils.lerp(linvel.x, direction.x, 0.1);
     const newLinvelZ = THREE.MathUtils.lerp(linvel.z, direction.z, 0.1);
@@ -131,12 +145,12 @@ export function Ship() {
   });
 
   return (
-    <RigidBody 
-      ref={bodyRef} 
-      position={[0, 0.5, 20]} 
-      colliders="hull" 
-      mass={10} 
-      linearDamping={1} 
+    <RigidBody
+      ref={bodyRef}
+      position={[0, 0.5, 20]}
+      colliders="hull"
+      mass={10}
+      linearDamping={1}
       angularDamping={2}
       lockRotations={false}
       enabledRotations={[false, true, false]}

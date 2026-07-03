@@ -7,8 +7,8 @@ export function Ocean() {
 
   useFrame((state) => {
     if (waterRef.current) {
-      // Simple wave animation
-      waterRef.current.position.y = Math.sin(state.clock.elapsedTime) * 0.1 - 0.5;
+      // Simple wave animation (slower frequency, smaller amplitude, raised sea level)
+      waterRef.current.position.y = Math.sin(state.clock.elapsedTime * 0.5) * 0.02 + 0.15;
     }
   });
 
