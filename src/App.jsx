@@ -22,7 +22,7 @@ function App() {
       <KeyboardControls map={keyboardMap}>
         <Canvas shadows camera={{ position: [0, 20, 20], fov: 45 }}>
           <color attach="background" args={['#87CEEB']} />
-          <fog attach="fog" args={['#87CEEB', 20, 100]} />
+          <fog attach="fog" args={['#87CEEB', 100, 800]} />
           
           <Suspense fallback={null}>
             <Physics timeStep="vary" gravity={[0, -9.81, 0]}>

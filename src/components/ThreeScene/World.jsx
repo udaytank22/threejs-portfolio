@@ -3,7 +3,7 @@ import { Environment, Sky } from '@react-three/drei';
 import { Ship } from './Ship';
 import { Ocean } from './Ocean';
 import { CameraRig } from './CameraRig';
-import { Islands } from './Islands';
+import { WorldMap } from './WorldMap';
 
 export default function World() {
   return (
@@ -23,7 +23,7 @@ export default function World() {
       <Environment preset="city" />
 
       <Ocean />
-      <Islands />
+      <WorldMap />
       
       {/* Ship is wrapped in Rapier rigid body inside the component */}
       <Ship />

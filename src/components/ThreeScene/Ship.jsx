@@ -94,8 +94,22 @@ export function Ship() {
   useFrame((state, delta) => {
     if (!bodyRef.current || !started) return;
 
-    const { forward, backward, left, right } = getKeys();
+    // Handle docked state
+    const isDocked = useStore.getState().isDocked;
     const linvel = bodyRef.current.linvel();
+    
+    if (isDocked) {
+      // Bring the ship to a halt quickly
+      bodyRef.current.setLinvel({
+        x: THREE.MathUtils.lerp(linvel.x, 0, 0.1),
+        y: linvel.y,
+        z: THREE.MathUtils.lerp(linvel.z, 0, 0.1)
+      }, true);
+      bodyRef.current.setAngvel({ x: 0, y: THREE.MathUtils.lerp(bodyRef.current.angvel().y, 0, 0.1), z: 0 }, true);
+      return;
+    }
+
+    const { forward, backward, left, right } = getKeys();
     const rotation = bodyRef.current.rotation();
     const euler = new THREE.Euler().setFromQuaternion(new THREE.Quaternion(rotation.x, rotation.y, rotation.z, rotation.w));
 

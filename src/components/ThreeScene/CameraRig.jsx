@@ -56,14 +56,26 @@ export function CameraRig() {
     };
   }, [gl]);
 
+  const currentLookAt = useRef(new THREE.Vector3(0, 0, 0));
+
   useFrame((state) => {
     const shipPosition = useStore.getState().shipPosition;
     const shipRotation = useStore.getState().shipRotation;
+    const isDocked = useStore.getState().isDocked;
+    const dockingCameraPosition = useStore.getState().dockingCameraPosition;
+    const dockingCameraTarget = useStore.getState().dockingCameraTarget;
     
+    let targetPos = new THREE.Vector3();
+    let lookAtTarget = new THREE.Vector3();
+
     if (isHQ) {
       // Drone camera mode target
-      state.camera.position.lerp(new THREE.Vector3(0, 50, -150), 0.05);
-      state.camera.lookAt(0, 0, -200);
+      targetPos.set(0, 50, -150);
+      lookAtTarget.set(0, 0, -200);
+    } else if (isDocked && dockingCameraPosition && dockingCameraTarget) {
+      // Cinematic docking camera
+      targetPos.set(...dockingCameraPosition);
+      lookAtTarget.set(...dockingCameraTarget);
     } else {
       // Combine ship's yaw rotation with user's manual mouse offset
       const totalAzimuth = shipRotation + angles.current.azimuth;
@@ -73,15 +85,14 @@ export function CameraRig() {
       const y = shipPosition[1] + angles.current.distance * Math.cos(angles.current.polar);
       const z = shipPosition[2] + angles.current.distance * Math.sin(angles.current.polar) * Math.cos(totalAzimuth);
       
-      const targetPos = new THREE.Vector3(x, y, z);
-      
-      // Smoothly interpolate to the new position
-      state.camera.position.lerp(targetPos, 0.1);
-      
-      // Always look at the ship (slightly above its base)
-      const lookAtTarget = new THREE.Vector3(shipPosition[0], shipPosition[1] + 2, shipPosition[2]);
-      state.camera.lookAt(lookAtTarget);
+      targetPos.set(x, y, z);
+      lookAtTarget.set(shipPosition[0], shipPosition[1] + 2, shipPosition[2]);
     }
+    
+    // Smoothly interpolate position and lookAt target
+    state.camera.position.lerp(targetPos, 0.05);
+    currentLookAt.current.lerp(lookAtTarget, 0.05);
+    state.camera.lookAt(currentLookAt.current);
   });
 
   return null;

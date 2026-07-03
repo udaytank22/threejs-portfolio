@@ -4,8 +4,16 @@ export const useStore = create((set) => ({
   started: false,
   setStarted: (started) => set({ started }),
   
-  currentStop: -1, // -1 is none, 0-8 are the islands
-  setCurrentStop: (stop) => set({ currentStop: stop }),
+  dockedPortIndex: -1, // -1 is none, 1-8 are the ports
+  setDockedPortIndex: (index) => set({ dockedPortIndex: index }),
+
+  isDocked: false,
+  setIsDocked: (isDocked) => set({ isDocked }),
+
+  // Defines where the camera should look when docked
+  dockingCameraTarget: null, 
+  dockingCameraPosition: null,
+  setDockingCamera: (pos, target) => set({ dockingCameraPosition: pos, dockingCameraTarget: target }),
 
   // For the final cinematic
   isHQ: false,
