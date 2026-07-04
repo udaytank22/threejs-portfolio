@@ -6,7 +6,7 @@ import { RigidBody, vec3 } from '@react-three/rapier';
 import { useStore } from '../../store/useStore';
 
 // Premium GLB loader component
-function PremiumShipModel() {
+function PremiumShipModel({ bobRef }) {
   const { scene } = useGLTF('/models/container_ship.glb');
 
   useEffect(() => {
@@ -16,7 +16,6 @@ function PremiumShipModel() {
           child.castShadow = true;
           child.receiveShadow = true;
           if (child.material) {
-            // Enhance PBR for Unreal Engine-like look
             child.material.envMapIntensity = 2.0;
             child.material.needsUpdate = true;
           }
@@ -25,12 +24,11 @@ function PremiumShipModel() {
     }
   }, [scene]);
 
-  // Note: Many third-party GLB models are modeled facing the X-axis.
-  // We wrap it in a group rotated by -90 degrees (-Math.PI/2) on the Y-axis so the bow points towards -Z (forward).
-  // If your ship is moving backward or sideways, you can change this rotation to Math.PI/2, Math.PI, or 0.
   return (
-    <group rotation={[0, -Math.PI / 2, 0]}>
-      <primitive object={scene} scale={[0.1, 0.1, 0.1]} position={[0, -0.2, 0]} />
+    <group ref={bobRef}>
+      <group rotation={[0, Math.PI / 2, 0]}>
+        <primitive object={scene} scale={[0.1, 0.1, 0.1]} position={[0, 0, 0]} />
+      </group>
     </group>
   );
 }
@@ -68,6 +66,7 @@ function PlaceholderShip() {
 
 export function Ship() {
   const bodyRef = useRef();
+  const bobRef = useRef();          // visual bobbing group
   const [subscribeKeys, getKeys] = useKeyboardControls();
   const started = useStore((state) => state.started);
 
@@ -139,15 +138,32 @@ export function Ship() {
       z: newLinvelZ
     }, true);
 
-    // Update global store with ship position for camera and UI without re-rendering
+    // Update global store with ship position, rotation and speed for camera and UI without re-rendering
     const pos = bodyRef.current.translation();
-    useStore.setState({ shipPosition: [pos.x, pos.y, pos.z], shipRotation: euler.y });
+    const currentSpeed = Math.hypot(linvel.x, linvel.z);
+    useStore.setState({ 
+      shipPosition: [pos.x, pos.y, pos.z], 
+      shipRotation: euler.y,
+      shipSpeed: currentSpeed
+    });
+
+    // ── Visual bobbing (heave + pitch + roll) ──
+    if (bobRef.current) {
+      const t = state.clock.elapsedTime;
+      const speed = Math.hypot(linvel.x, linvel.z); // 0 when still
+      const motionScale = Math.min(speed / 5, 1);   // ramp up with speed
+
+      // Ship is stable — no bobbing
+      bobRef.current.position.y = 0;
+      bobRef.current.rotation.x = 0;
+      bobRef.current.rotation.z = 0;
+    }
   });
 
   return (
     <RigidBody
       ref={bodyRef}
-      position={[0, 0.5, 20]}
+      position={[0, -0.25, 20]}
       colliders="hull"
       mass={10}
       linearDamping={1}
@@ -158,7 +174,7 @@ export function Ship() {
     >
       {modelExists === true ? (
         <Suspense fallback={<PlaceholderShip />}>
-          <PremiumShipModel />
+          <PremiumShipModel bobRef={bobRef} />
         </Suspense>
       ) : (
         <PlaceholderShip />
