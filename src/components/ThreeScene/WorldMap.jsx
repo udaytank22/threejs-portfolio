@@ -3,6 +3,7 @@ import { RigidBody, CuboidCollider } from '@react-three/rapier';
 import { useStore } from '../../store/useStore';
 import { HologramScreen } from './HologramScreen';
 import { useGLTF } from '@react-three/drei';
+import { useFrame } from '@react-three/fiber';
 
 // Component to load and clone the lighthouse model for reuse across multiple islands
 function Lighthouse() {
@@ -12,14 +13,20 @@ function Lighthouse() {
     if (!scene) return null;
     const cloned = scene.clone();
     cloned.traverse((child) => {
-      if (child.name && child.name.includes('Ocean')) {
-        child.visible = false;
+      if (child.name) {
+        const name = child.name.toLowerCase();
+        if (name.includes('ocean') || name.includes('cloud') || name.includes('bird') || name.includes('fly')) {
+          child.visible = false;
+        }
       }
       if (child.isMesh) {
         child.castShadow = true;
         child.receiveShadow = true;
         if (child.material) {
-          child.material.envMapIntensity = 1.5;
+          // Adjust material to make the rock look harder and less wet/shiny
+          child.material.envMapIntensity = 0.5;
+          child.material.roughness = Math.max(0.8, child.material.roughness || 0.8);
+          child.material.metalness = Math.min(0.1, child.material.metalness || 0.1);
           child.material.needsUpdate = true;
         }
       }
@@ -39,7 +46,7 @@ function Lighthouse() {
 }
 
 // Basic Island Component to represent the stops
-function Island({ position, title, description, imagePath, stopIndex, color, children }) {
+function Island({ position, stopIndex, children }) {
   const currentStop = useStore((state) => state.currentStop);
   const setCurrentStop = useStore((state) => state.setCurrentStop);
 
@@ -47,13 +54,9 @@ function Island({ position, title, description, imagePath, stopIndex, color, chi
 
   return (
     <group position={position}>
-      {/* Island Base */}
-      <RigidBody type="fixed" colliders="hull">
-        <mesh position={[0, -0.5, 0]} receiveShadow castShadow>
-          <cylinderGeometry args={[10, 12, 2, 8]} />
-          <meshStandardMaterial color={color || "#22c55e"} roughness={0.8} />
-        </mesh>
-        
+      {/* Island Base — explicit box collider blocks ship from passing through */}
+      <RigidBody type="fixed" colliders={false}>
+        <CuboidCollider args={[6, 10, 6]} position={[0, 0, 0]} />
         {/* Children (props/buildings) */}
         {children}
       </RigidBody>
@@ -66,16 +69,9 @@ function Island({ position, title, description, imagePath, stopIndex, color, chi
         onIntersectionEnter={() => setCurrentStop(stopIndex)}
         onIntersectionExit={() => setCurrentStop(-1)}
       >
-        <CuboidCollider args={[15, 10, 15]} position={[0, 0, 0]} />
+        <CuboidCollider args={[8, 10, 8]} position={[0, 0, 0]} />
       </RigidBody>
 
-      {/* Hologram UI */}
-      <HologramScreen 
-        title={title} 
-        description={description} 
-        imagePath={imagePath} 
-        isVisible={isActive} 
-      />
     </group>
   );
 }
@@ -83,53 +79,53 @@ function Island({ position, title, description, imagePath, stopIndex, color, chi
 export function WorldMap() {
   return (
     <>
-      {/* STOP 1: AI Email Parser */}
+      {/* STOP 1: Company Introduction */}
       <Island 
-        position={[-30, 0, -30]} 
+        position={[-60, 0, -60]} 
         stopIndex={1} 
-        title="AI Email Parser" 
-        description="Emails fly into the AI machine and are parsed into Inquiries automatically."
-        color="#3b82f6"
+        title="Meet Manifest" 
+        description="The AI Operating System for Global Trading."
+        color="#38bdf8"
       >
         <Lighthouse />
       </Island>
 
-      {/* STOP 2: Inquiry Management */}
+      {/* STOP 2: The Problem */}
       <Island 
-        position={[30, 0, -40]} 
+        position={[65, 0, -90]} 
         stopIndex={2} 
-        title="Inquiry Management" 
-        description="Review parsed inquiries. Track status, priority, and assign to team members."
-        color="#eab308"
-      >
-        <Lighthouse />
-      </Island>
-
-      {/* STOP 3: Quotation */}
-      <Island 
-        position={[-50, 0, -70]} 
-        stopIndex={3} 
-        title="Quotation" 
-        description="Generate precise quotations instantly from your uploaded data."
+        title="Trading Is Broken" 
+        description="Legacy tools are killing your margins. Discover the pain points."
         color="#f97316"
       >
         <Lighthouse />
       </Island>
 
-      {/* STOP 4: Purchase Order */}
+      {/* STOP 3: The Platform */}
       <Island 
-        position={[40, 0, -90]} 
-        stopIndex={4} 
-        title="Purchase Orders" 
-        description="Manage massive POs seamlessly. Warehouses stock and prepare."
+        position={[-90, 0, -150]} 
+        stopIndex={3} 
+        title="The Platform" 
+        description="Six AI-powered modules. One seamless workflow."
         color="#a855f7"
+      >
+        <Lighthouse />
+      </Island>
+
+      {/* STOP 4: Results & ROI */}
+      <Island 
+        position={[80, 0, -200]} 
+        stopIndex={4} 
+        title="Proven ROI" 
+        description="Real results from real trading companies."
+        color="#22c55e"
       >
         <Lighthouse />
       </Island>
       
       {/* Additional stops can be added simply by adding more <Island> components */}
       <Island 
-        position={[0, 0, -150]} 
+        position={[0, 0, -300]} 
         stopIndex={9} 
         title="Manifest HQ" 
         description="The AI Operating System for Global Trading. Book your demo today."

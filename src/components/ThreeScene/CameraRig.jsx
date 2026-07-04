@@ -8,7 +8,8 @@ export function CameraRig() {
   const isHQ = useStore((state) => state.isHQ);
   
   // Base offset angles and distance from the ship
-  const angles = useRef({ azimuth: 0, polar: Math.PI / 2.2, distance: 12 });
+  // Adjusted to match the "over-the-shoulder" third-person view from the screenshot
+  const angles = useRef({ azimuth: 0, polar: Math.PI / 2.15, distance: 8 });
   const isDragging = useRef(false);
   const previousMouse = useRef({ x: 0, y: 0 });
 

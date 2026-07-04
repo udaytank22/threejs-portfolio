@@ -4,23 +4,25 @@ import { Ship } from './Ship';
 import { Ocean } from './Ocean';
 import { CameraRig } from './CameraRig';
 import { WorldMap } from './WorldMap';
+import { getTheme } from '../../utils/theme';
 
 export default function World() {
+  const theme = getTheme();
   return (
     <>
-      <ambientLight intensity={0.6} />
+      <ambientLight intensity={theme.ambientIntensity} />
       <directionalLight
         castShadow
-        position={[100, 100, 50]}
-        intensity={1.5}
+        position={theme.sunPosition}
+        intensity={theme.directionalIntensity}
         shadow-mapSize={[2048, 2048]}
         shadow-camera-left={-100}
         shadow-camera-right={100}
         shadow-camera-top={100}
         shadow-camera-bottom={-100}
       />
-      <Sky sunPosition={[100, 20, 100]} turbidity={0.3} rayleigh={0.5} mieCoefficient={0.005} mieDirectionalG={0.7} />
-      <Environment preset="city" />
+      <Sky sunPosition={theme.sunPosition} turbidity={0.3} rayleigh={theme.rayleigh} mieCoefficient={theme.mieCoefficient} mieDirectionalG={0.7} />
+      <Environment preset={theme.period === 'night' ? 'night' : 'city'} />
 
       <Ocean />
       <WorldMap />

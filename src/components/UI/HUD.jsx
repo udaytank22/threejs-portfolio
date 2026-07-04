@@ -1,6 +1,8 @@
 import React from 'react';
 import { useStore } from '../../store/useStore';
 import { useKeyboardControls } from '@react-three/drei';
+import StopPopup from './StopPopup';
+import NavigationCompass from './NavigationCompass';
 
 export default function HUD() {
   const started = useStore((state) => state.started);
@@ -10,11 +12,15 @@ export default function HUD() {
 
   if (started) {
     return (
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 pointer-events-none">
-        <div className="glass px-6 py-3 rounded-full text-white/50 text-sm font-mono flex items-center gap-4">
-          <span>W/A/S/D to sail</span>
+      <>
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 pointer-events-none">
+          <div className="glass px-6 py-3 rounded-full text-white/50 text-sm font-mono flex items-center gap-4">
+            <span>W/A/S/D to sail</span>
+          </div>
         </div>
-      </div>
+        <NavigationCompass />
+        <StopPopup />
+      </>
     );
   }
 
